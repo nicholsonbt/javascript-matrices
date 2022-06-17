@@ -1,5 +1,60 @@
 var MATRICES = {};
 
+// Treat vectors as matrices with 1 column.
+function Vector() {
+	let matrix;
+	
+	this.constructorError = function(err) {
+		console.log(`A vector must be initialised as 'Vector(a)' or 'Vector([a, b, c])'
+  - 'Vector(a)' will construct a column vector with 'a' rows (initialised to 0).
+  - 'Vector([a, b, c])' will construct the column vector:
+      a
+      b
+      c
+  (3 rows)`);
+		throw err;
+	}
+	
+	if (arguments.length == 0) {
+		this.constructorError("No arguments given");
+	}
+	
+	if (arguments.length > 1) {
+		this.constructorError("Too many arguments given");
+	}
+	
+	// Must be a 1d array of numbers or an integer
+	if (arguments.length == 1) {
+		if (typeof arguments[0] == 'object' && arguments[0].constructor == Array) {
+			matrix = new Matrix(arguments[0].length, 1);
+			
+			if (arguments[0].length < 1)
+				this.constructorError("A vector must have at least one value");
+			
+			for (let i = 0; i < arguments[0].length; i++) {
+				if (typeof arguments[0][i] != 'number')
+					this.constructorError("Non-numerical element in array");
+				else {
+					matrix.setElementAt(i, 0, arguments[0][i]);
+				}
+			}
+		} else if (typeof arguments[0] == 'number') {
+			matrix = new Matrix(arguments[0], 1);
+		}
+	}
+	
+	return matrix;
+}
+
+function Identity(n) {
+	let matrix = new Matrix(n, n);
+	
+	for (let i = 0; i < n; i++)
+		matrix.setElementAt(i, i, 1);
+	
+	return matrix;
+}
+
 function Matrix() {
 	this.constructorError = function(err) {
 		console.log(`A matix must be initialised as 'Matrix(a, b)' or 'Matrix([[a, b], [c, d], [e, f]])'
@@ -17,8 +72,6 @@ function Matrix() {
 	this.t = false; // Will be used to transpose without having to rearrange the data array.
 	this.data = [];
 	
-	this.isValidMatrix
-	
 	if (arguments.length == 0) {
 		this.constructorError("No arguments given");
 	}
@@ -29,7 +82,6 @@ function Matrix() {
 	
 	// Must be a 2d array of equal size, containing numbers.
 	if (arguments.length == 1) {
-		console.log(arguments[0]);
 		if (typeof arguments[0] != 'object' || arguments[0].constructor != Array)
 			this.constructorError("A 2D array should be given");
 		
@@ -47,6 +99,9 @@ function Matrix() {
 				this.constructorError("The number of columns is inconsistent");
 		}
 		
+		if (this.cols < 1 || this.rows < 1)
+			this.constructorError("A matrix must have at least one value");
+		
 		for (let i = 0; i < this.rows; i++) {
 			for (let j = 0; j < this.cols; j++) {
 				this.data[j + this.cols * i] = arguments[0][i][j];
@@ -57,6 +112,9 @@ function Matrix() {
 	if (arguments.length == 2) {
 		if (typeof arguments[0] != 'number' || typeof arguments[1] != 'number')
 			this.constructorError("The number of rows and columns must be numbers");
+		
+		if (arguments[0] < 1 || arguments[1] < 1)
+			this.constructorError("A matrix must have at least one value");
 		
 		this.rows = arguments[0];
 		this.cols = arguments[1];
@@ -70,9 +128,9 @@ function Matrix() {
 	
 	this.print = function() {
 		let str = "";
-		for (let i = 0; i < this.rows; i++) {
-			for (let j = 0; j < this.cols; j++) {
-				str += this.data[j + this.cols * i] + " ";
+		for (let i = 0; i < this.shape()[0]; i++) {
+			for (let j = 0; j < this.shape()[1]; j++) {
+				str += this.data[j + this.shape()[1] * i] + " ";
 			}
 			str += "\n";
 		}
@@ -80,44 +138,61 @@ function Matrix() {
 	}
 	
 	this.size = function() {
-		return "(" + this.rows + ", " + this.cols + ")";
+		return this.rows * this.columns;
 	}
 	
 	this.shape = function() {
-		return [this.rows, this.cols];
+		let columns, rows;
+		
+		if (this.t) {
+			columns = this.rows;
+			rows = this.cols;
+		} else {
+			columns = this.cols;
+			rows = this.rows;
+		}
+		
+		return [rows, columns];
 	}
 	
 	this.getElementAt = function(row, col) {
-		if (col < 0 || col >= this.cols || row < 0 || row >= this.rows)
+		if (col < 0 || col >= this.shape()[1] || row < 0 || row >= this.shape()[0])
 			throw "Out of bounds";
 			
-		return this.data[col + this.cols * row];
+		return this.data[col + this.shape()[1] * row];
 	}
 	
 	this.setElementAt = function(row, col, value) {
-		if (col < 0 || col >= this.cols || row < 0 || row >= this.rows)
+		if (col < 0 || col >= this.shape()[1] || row < 0 || row >= this.shape()[0])
 			throw "Out of bounds";
-		
+
 		if (typeof value != 'number')
 			throw "Value must be a number";
 		
-		this.data[col + this.cols * row] = value;
+		this.data[col + this.shape()[1] * row] = value;
+	}
+	
+	this.transpose = function() {
+		this.t = !this.t;
 	}
 }
 
-MATRICES.CanCross = function(matrixA, matrixB) {
-	return matrixA.cols == matrixB.rows;
+
+// Two matrices can only be multiplied if matrix A has the same number of columns as matrix B has rows.
+MATRICES.CanMultiply = function(matrixA, matrixB) {
+	return matrixA.shape()[1] == matrixB.shape()[0];
 }
 
-MATRICES.CrossProduct = function(matrixA, matrixB) {
-	if (!MATRICES.CanCross(matrixA, matrixB))
-		throw "MatrixA.columns == MatrixB.rows must be true to calculate the cross product";
+
+MATRICES.Multiply = function(matrixA, matrixB) {
+	if (!MATRICES.CanMultiply(matrixA, matrixB))
+		throw "MatrixA.columns == MatrixB.rows must be true to calculate the product";
 	
-	let matrix = new Matrix(matrixA.rows, matrixB.cols);
+	let matrix = new Matrix(matrixA.shape()[0], matrixB.shape()[1]);
 	
-	for (let i = 0; i < matrix.rows; i++) {
-		for (let j = 0; j < matrix.cols; j++) {
-			for (let k = 0; k < matrixA.cols; k++) {
+	for (let i = 0; i < matrix.shape()[0]; i++) {
+		for (let j = 0; j < matrix.shape()[1]; j++) {
+			for (let k = 0; k < matrixA.shape()[1]; k++) {
 				let value = matrix.getElementAt(i, j) + matrixA.getElementAt(i, k) * matrixB.getElementAt(k, j)
 				matrix.setElementAt(i, j, value);
 			}
@@ -129,9 +204,7 @@ MATRICES.CrossProduct = function(matrixA, matrixB) {
 
 
 // Immediate features to add:
-//  - Transpose,
 //  - Determinant,
 //  - Inverse,
-//  - Identity matrix,
 //  - Adjugate,
 //  - Etc,
