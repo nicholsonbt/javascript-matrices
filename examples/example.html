@@ -8,6 +8,7 @@
 				let double_T = MATRICES.Multiply(2, new Identity(3));
 				let position = new Vector([2, 5.1, 7.8]);
 				double_T.print();
+				MATRICES.Add(double_T, double_T).print();
 				position.print();
 				let newPos = MATRICES.Multiply(double_T, position);
 				newPos.print();

@@ -208,14 +208,14 @@ MATRICES.Multiply = function(matrixA, matrixB) {
 
 
 MATRICES.Add = function(matrixA, matrixB) {
-	if (matrixA.shape() != matrixB.shape())
+	if (matrixA.shape()[0] != matrixB.shape()[0] || matrixA.shape()[1] != matrixB.shape()[1])
 		throw "MatrixA and MatrixB must have the same shape to add";
 	
 	let matrix = new Matrix(matrixA.shape()[0], matrixA.shape()[1]);
 	
 	for (let i = 0; i < matrix.shape()[0]; i++) {
 		for (let j = 0; j < matrix.shape()[1]; j++) {
-			let value = matrixA.getElementAt(i, k) + matrixB.getElementAt(k, j)
+			let value = matrixA.getElementAt(i, j) + matrixB.getElementAt(i, j)
 			matrix.setElementAt(i, j, value);
 		}
 	}
