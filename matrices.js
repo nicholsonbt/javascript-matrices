@@ -130,7 +130,10 @@ function Matrix() {
 		let str = "";
 		for (let i = 0; i < this.shape()[0]; i++) {
 			for (let j = 0; j < this.shape()[1]; j++) {
-				str += this.data[j + this.shape()[1] * i] + " ";
+				if (this.t)
+					str += this.data[i + this.shape()[0] * j] + " ";
+				else
+					str += this.data[j + this.shape()[1] * i] + " ";
 			}
 			str += "\n";
 		}
@@ -274,10 +277,72 @@ MATRICES.Determinant = function(matrix) {
 	return value;
 }
 
+MATRICES.IsSingular = function(matrix) {
+	// Using try to catch any thrown errors about shape.
+	try {
+		return MATRICES.Determinant(matrix) == 0;
+	} catch (err) {
+		return false;
+	}
+}
 
+
+
+
+MATRICES.Adjugate = function(matrix) {
+	// A matrix can only have an adjugate if it's square.
+	if (matrix.shape()[0] != matrix.shape()[1])
+		throw "A matrix can only have a determinant if it's square";
+	
+	// Base case: if the matrix is (1 x 1), return this.
+	if (matrix.shape()[0] == 1)
+		return matrix.getElementAt(0, 0);
+	
+	// Set value to 0 initially.
+	
+	let m = new Identity(matrix.shape()[0]);
+	
+	// For each element on the top row of the matrix, multiply by its minor and add
+	// to the determinant value (subtract if the top value is at an odd index).
+	for (let i = 0; i < matrix.shape()[0]; i++) {
+		for (let j = 0; j < matrix.shape()[0]; j++) {
+			let sub_matrix = new Identity(matrix.shape()[0] - 1);
+
+			// Assign minor values to sub-matrix.
+			for (let k = 0; k < matrix.shape()[0]; k++) {
+				for (let l = 0; l < matrix.shape()[0]; l++) {
+					let value = matrix.getElementAt(k, l);
+					
+					if (k < i) {
+						if (l < j)
+							sub_matrix.setElementAt(k, l, value);
+						else if (l > j)
+							sub_matrix.setElementAt(k, l - 1, value);
+					} else if (k > i) {
+						if (l < j)
+							sub_matrix.setElementAt(k - 1, l, value);
+						else if (l > j)
+							sub_matrix.setElementAt(k - 1, l - 1, value);
+					}
+				}
+			}
+			
+			let value = MATRICES.Determinant(sub_matrix);
+			
+			if ((i + j) % 2 != 0)
+				value = -value;
+			
+		
+			m.setElementAt(i, j, value);
+		}
+	}
+	
+	m.transpose();
+	
+	return m;
+}
 
 
 // Immediate features to add:
 //  - Inverse,
-//  - Adjugate,
 //  - Etc,
