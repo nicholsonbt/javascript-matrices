@@ -161,7 +161,10 @@ function Matrix() {
 	this.getElementAt = function(row, col) {
 		if (col < 0 || col >= this.shape()[1] || row < 0 || row >= this.shape()[0])
 			throw "Out of bounds";
-			
+		
+		if (this.t)
+			return this.data[row + this.shape()[0] * col];
+		
 		return this.data[col + this.shape()[1] * row];
 	}
 	
@@ -172,7 +175,10 @@ function Matrix() {
 		if (typeof value != 'number')
 			throw "Value must be a number";
 		
-		this.data[col + this.shape()[1] * row] = value;
+		if (this.t)
+			this.data[row + this.shape()[0] * col] = value;
+		else
+			this.data[col + this.shape()[1] * row] = value;
 	}
 	
 	this.transpose = function() {
@@ -298,8 +304,6 @@ MATRICES.Adjugate = function(matrix) {
 	if (matrix.shape()[0] == 1)
 		return matrix.getElementAt(0, 0);
 	
-	// Set value to 0 initially.
-	
 	let m = new Identity(matrix.shape()[0]);
 	
 	// For each element on the top row of the matrix, multiply by its minor and add
@@ -342,7 +346,20 @@ MATRICES.Adjugate = function(matrix) {
 	return m;
 }
 
+MATRICES.HasInverse = function(matrix) {
+	let determinant = MATRICES.Determinant(matrix);
+	
+	if (determinant == 0)
+		throw "Determinant is 0, so this matrix has no inverse";
+}
 
-// Immediate features to add:
-//  - Inverse,
-//  - Etc,
+MATRICES.Inverse = function(matrix) {
+	let determinant = MATRICES.Determinant(matrix);
+	
+	if (determinant == 0)
+		throw "Determinant is 0, so this matrix has no inverse";
+	
+	let adjugate = MATRICES.Adjugate(matrix);
+	
+	return MATRICES.Multiply(1 / determinant, adjugate);
+}
