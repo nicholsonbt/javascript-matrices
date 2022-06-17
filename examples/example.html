@@ -5,6 +5,9 @@
 
 		<script type="application/javascript">
 			window.addEventListener('load', function(e) {
+				let matrix_1 = new Matrix([[1,2,3,4],[5,2,7,8],[9,0,1,2],[3,4,5,6]]); // Determinant = -80
+				console.log(MATRICES.Determinant(matrix_1));
+				
 				let double_T = MATRICES.Multiply(2, new Identity(3));
 				let position = new Vector([2, 5.1, 7.8]);
 				double_T.print();

@@ -208,11 +208,14 @@ MATRICES.Multiply = function(matrixA, matrixB) {
 
 
 MATRICES.Add = function(matrixA, matrixB) {
+	// The two matrices must have the same shape for us to add them.
 	if (matrixA.shape()[0] != matrixB.shape()[0] || matrixA.shape()[1] != matrixB.shape()[1])
 		throw "MatrixA and MatrixB must have the same shape to add";
 	
+	// Create a new matrix of the same shape.
 	let matrix = new Matrix(matrixA.shape()[0], matrixA.shape()[1]);
 	
+	// For each row and column, add the values in matrixA and matrixB at that index.
 	for (let i = 0; i < matrix.shape()[0]; i++) {
 		for (let j = 0; j < matrix.shape()[1]; j++) {
 			let value = matrixA.getElementAt(i, j) + matrixB.getElementAt(i, j)
@@ -224,14 +227,57 @@ MATRICES.Add = function(matrixA, matrixB) {
 }
 
 MATRICES.Subtract = function(matrixA, matrixB) {
+	// Adding a matrix multiplied by the scalar -1 is the same as subtracting by it.
 	return MATRICES.Add(matrixA, MATRICES.Multiply(-1, matrixB));
+}
+
+MATRICES.Determinant = function(matrix) {
+	// A matrix can only have a determinant if it's square.
+	if (matrix.shape()[0] != matrix.shape()[1])
+		throw "A matrix can only have a determinant if it's square";
+	
+	// Base case: if the matrix is (1 x 1), return this.
+	if (matrix.shape()[0] == 1)
+		return matrix.getElementAt(0, 0);
+	
+	// Set value to 0 initially.
+	let value = 0;
+	
+	// For each element on the top row of the matrix, multiply by its minor and add
+	// to the determinant value (subtract if the top value is at an odd index).
+	for (let i = 0; i < matrix.shape()[0]; i++) {
+		// Used identity as it must be a square matrix and we will change the values anyway.
+		let sub_matrix = new Identity(matrix.shape()[0] - 1);
+		
+		// Assign minor values to sub-matrix.
+		for (let j = 1; j < matrix.shape()[0]; j++) {
+			for (let k = 0; k < matrix.shape()[0]; k++) {
+				let value = matrix.getElementAt(j, k);
+				if (k < i) {
+					sub_matrix.setElementAt(j - 1, k, value);
+				} else if (k > i) {
+					sub_matrix.setElementAt(j - 1, k - 1, value);
+				}
+			}
+		}
+		
+		// Find the sub-determinant using the minor matrix.
+		let sub_det = matrix.getElementAt(0, i) * MATRICES.Determinant(sub_matrix);
+
+		// Add if even index. Subtract if odd.
+		if (i % 2 == 0)
+			value += sub_det;
+		else
+			value -= sub_det;
+	}
+	
+	return value;
 }
 
 
 
 
 // Immediate features to add:
-//  - Determinant,
 //  - Inverse,
 //  - Adjugate,
 //  - Etc,
