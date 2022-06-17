@@ -178,29 +178,56 @@ function Matrix() {
 }
 
 
-// Two matrices can only be multiplied if matrix A has the same number of columns as matrix B has rows.
-MATRICES.CanMultiply = function(matrixA, matrixB) {
-	return matrixA.shape()[1] == matrixB.shape()[0];
-}
-
-
 MATRICES.Multiply = function(matrixA, matrixB) {
-	if (!MATRICES.CanMultiply(matrixA, matrixB))
+	if (typeof matrixB != 'object' || matrixB.constructor != Matrix)
+		throw "The second parameter must be a matrix"
+	
+	let matrix = new Matrix(matrixB.shape()[0], matrixB.shape()[1]);
+	
+	if (typeof matrixA == 'number') {
+		for (let i = 0; i < matrix.shape()[0]; i++) {
+			for (let j = 0; j < matrix.shape()[1]; j++) {
+				matrix.setElementAt(i, j, matrixB.getElementAt(i, j) * matrixA);
+			}
+		}
+	} else if (matrixA.shape()[1] != matrixB.shape()[0]) {
 		throw "MatrixA.columns == MatrixB.rows must be true to calculate the product";
-	
-	let matrix = new Matrix(matrixA.shape()[0], matrixB.shape()[1]);
-	
-	for (let i = 0; i < matrix.shape()[0]; i++) {
-		for (let j = 0; j < matrix.shape()[1]; j++) {
-			for (let k = 0; k < matrixA.shape()[1]; k++) {
-				let value = matrix.getElementAt(i, j) + matrixA.getElementAt(i, k) * matrixB.getElementAt(k, j)
-				matrix.setElementAt(i, j, value);
+	} else {
+		for (let i = 0; i < matrix.shape()[0]; i++) {
+			for (let j = 0; j < matrix.shape()[1]; j++) {
+				for (let k = 0; k < matrixA.shape()[1]; k++) {
+					let value = matrix.getElementAt(i, j) + matrixA.getElementAt(i, k) * matrixB.getElementAt(k, j)
+					matrix.setElementAt(i, j, value);
+				}
 			}
 		}
 	}
 	
 	return matrix;
 }
+
+
+MATRICES.Add = function(matrixA, matrixB) {
+	if (matrixA.shape() != matrixB.shape())
+		throw "MatrixA and MatrixB must have the same shape to add";
+	
+	let matrix = new Matrix(matrixA.shape()[0], matrixA.shape()[1]);
+	
+	for (let i = 0; i < matrix.shape()[0]; i++) {
+		for (let j = 0; j < matrix.shape()[1]; j++) {
+			let value = matrixA.getElementAt(i, k) + matrixB.getElementAt(k, j)
+			matrix.setElementAt(i, j, value);
+		}
+	}
+	
+	return matrix;
+}
+
+MATRICES.Subtract = function(matrixA, matrixB) {
+	return MATRICES.Add(matrixA, MATRICES.Multiply(-1, matrixB));
+}
+
+
 
 
 // Immediate features to add:

@@ -5,16 +5,12 @@
 
 		<script type="application/javascript">
 			window.addEventListener('load', function(e) {
-				let matrix1 = new Matrix([[1, 4, 7], [2, 5, 8]]);
-				let matrix2 = new Identity(2);
-				matrix1.print();
-				matrix2.print();
-				matrix1.transpose();
-				matrix1.print();
-				let matrix3 = MATRICES.Multiply(matrix1, matrix2);
-				let vector = new Vector([5, 6, 1, 0, 3.6]);
-				vector.print();
-				matrix3.print();
+				let double_T = MATRICES.Multiply(2, new Identity(3));
+				let position = new Vector([2, 5.1, 7.8]);
+				double_T.print();
+				position.print();
+				let newPos = MATRICES.Multiply(double_T, position);
+				newPos.print();
 			});
 		</script>
 	</head>
